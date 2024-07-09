@@ -6,15 +6,15 @@ extern crate odbc;
 use odbc::*;
 use std::ffi::CString;
 
-const A: &'static str = "SELECT A FROM TEST_TYPES WHERE A = ?;";
-const B: &'static str = "SELECT B FROM TEST_TYPES WHERE B = ?;";
-const C: &'static str = "SELECT C FROM TEST_TYPES WHERE C = ?;";
+const A: &'static str = "SELECT \"A\" FROM \"TEST_TYPES\" WHERE \"A\" = ?;";
+const B: &'static str = "SELECT \"B\" FROM \"TEST_TYPES\" WHERE \"B\" = ?;";
+const C: &'static str = "SELECT \"C\" FROM \"TEST_TYPES\" WHERE \"C\" = ?;";
 
 macro_rules! test_type {
     ($c:expr, $e:expr) => ({
 
         let env = create_environment_v3().unwrap();
-        let conn = env.connect("TestDataSource", "", "").unwrap();
+        let conn = env.connect("ps", "", "").unwrap();
         let stmt = Statement::with_parent(&conn).unwrap();
         let stmt = stmt.bind_parameter(1, $e).unwrap();
         if let Ok(Data(mut stmt)) = stmt.exec_direct($c){
@@ -43,6 +43,26 @@ fn _vec() {
     //TODO: ignored due to weird SQLite VARBINARY handling, may be it works in other DBs
     let param = "Hello, World!".as_bytes().to_vec();
     test_type!(A, &param)
+}
+
+#[test]
+fn _my_test() {
+    let connection_string = "DSN=ps;".to_string();
+    let env = create_environment_v3().unwrap();
+    let conn = env.connect_with_connection_string(&connection_string).unwrap();
+    let stmt = Statement::with_parent(&conn).unwrap();
+    let sql_text = "SELECT \"A\" FROM \"TEST_TYPES\" WHERE \"A\"= 'Hello, World!'".to_string();
+    //let stmt = stmt.bind_parameter(1, &param).unwrap();
+    if let Ok(Data(mut stmt)) = stmt.exec_direct(&sql_text){
+        if let Some(_) = stmt.fetch().unwrap(){
+            //DO NOTHING
+        } else{
+            panic!("Result set has been empty");
+        }
+    }else{
+        panic!("SELECT did not return result set");
+    };  
+
 }
 
 #[test]

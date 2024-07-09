@@ -33,16 +33,14 @@ where
     ) -> Option<Self>;
 }
 
-impl MySupportedType for DateTime<Local> {
+impl MySupportedType for DateTime<FixedOffset> {
     fn extract_from<'a, 'con, S, AC: AutocommitMode>(
         cursor: &mut odbc::Cursor<'a, 'con, 'con, S, AC>,
         index: u16,
     ) -> Option<Self> {
         cursor.get_data(index).expect("Can't get column").map(
             |datetime: String| {
-                Local
-                    .datetime_from_str(&datetime, "%Y-%m-%d %H:%M:%S%.f")
-                    .unwrap()
+                DateTime::parse_from_str(&datetime, "%Y-%m-%d %H:%M:%S%.f").unwrap()
             },
         )
     }
@@ -53,7 +51,7 @@ fn main() {
     println!("Success: {}", test_me().unwrap().expect("No result!"))
 }
 
-fn test_me() -> std::result::Result<Option<DateTime<Local>>, Box<DiagnosticRecord>> {
+fn test_me() -> std::result::Result<Option<DateTime<FixedOffset>>, Box<DiagnosticRecord>> {
     let env = create_environment_v3().map_err(|e| {
         e.expect("Can't create ODBC environment")
     })?;
