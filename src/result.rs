@@ -4,7 +4,7 @@ use safe;
 use std;
 
 /// Result type returned by most functions in this crate
-pub type Result<T> = std::result::Result<T, DiagnosticRecord>;
+pub type Result<T> = std::result::Result<T, Box<DiagnosticRecord>>;
 
 #[must_use]
 pub enum Return<T> {
@@ -35,7 +35,7 @@ impl<T> Return<T> {
                     error!("{}", diag);
                     i += 1;
                 }
-                Err(diag)
+                Err(Box::new(diag))
             }
         }
     }
@@ -68,7 +68,7 @@ where
                 error!("{}", diag);
                 i += 1;
             }
-            Err(diag)
+            Err(Box::new(diag))
         }
     }
 }
@@ -99,7 +99,7 @@ where
                 error!("{}", diag);
                 i += 1;
             }
-            Err(diag)
+            Err(Box::new(diag))
         }
     }
 }
@@ -129,7 +129,7 @@ where
                 error!("{}", diag_rec);
                 i += 1;
             }
-            Err(diag_rec)
+            Err(Box::new(diag_rec))
         }
     }
 }

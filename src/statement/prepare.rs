@@ -39,7 +39,7 @@ impl<'a, 'b, AC: AutocommitMode> Statement<'a, 'b, Allocated, NoResult, AC> {
     /// # }
     /// ```
     pub fn prepare(mut self, sql_text: &str) -> Result<Statement<'a, 'b, Prepared, NoResult, AC>> {
-        self.raii.prepare(sql_text).into_result(&mut self)?;
+        self.raii.prepare(sql_text).into_result(& self)?;
         Ok(Statement::with_raii(self.raii))
     }
 
@@ -64,7 +64,7 @@ impl<'a, 'b, AC: AutocommitMode> Statement<'a, 'b, Allocated, NoResult, AC> {
     /// # }
     /// ```
     pub fn prepare_bytes(mut self, bytes: &[u8]) -> Result<Statement<'a, 'b, Prepared, NoResult, AC>> {
-        self.raii.prepare_byte(bytes).into_result(&mut self)?;
+        self.raii.prepare_byte(bytes).into_result(& self)?;
         Ok(Statement::with_raii(self.raii))
     }
 }
@@ -85,7 +85,7 @@ impl<'a, 'b, AC: AutocommitMode> Statement<'a, 'b, Prepared, NoResult, AC> {
 
     /// Executes a prepared statement.
     pub fn execute(mut self) -> Result<ResultSetState<'a, 'b, Prepared, AC>> {
-        if self.raii.execute().into_result(&mut self)? {
+        if self.raii.execute().into_result(& self)? {
             let num_cols = self.raii.num_result_cols().into_result(&self)?;
             if num_cols > 0 {
                 Ok(ResultSetState::Data(Statement::with_raii(self.raii)))

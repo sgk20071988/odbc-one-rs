@@ -103,7 +103,7 @@ impl<'a, 'b, S, R, AC: AutocommitMode> Handle for Statement<'a, 'b, S, R, AC> {
 impl<'a, 'b, S, R, AC: AutocommitMode> Statement<'a, 'b, S, R, AC> {
     fn with_raii(raii: Raii<'a, ffi::Stmt>) -> Self {
         Statement {
-            raii: raii,
+            raii,
             autocommit_mode: PhantomData,
             state: PhantomData,
             result: PhantomData,
@@ -124,8 +124,8 @@ impl<'a, 'b, 'env, AC: AutocommitMode> Statement<'a, 'b, Allocated, NoResult, AC
         self.raii.affected_row_count().into_result(self)
     }
 
-    pub fn tables(self, catalog_name: &String, schema_name: &String, table_name: &String, table_type: &String) -> Result<Statement<'a, 'b, Executed, HasResult, AC>> {
-        self.tables_str(catalog_name.as_str(), schema_name.as_str(), table_name.as_str(), table_type.as_str())
+    pub fn tables(self, catalog_name: &str, schema_name: &str, table_name: &str, table_type: &str) -> Result<Statement<'a, 'b, Executed, HasResult, AC>> {
+        self.tables_str(catalog_name, schema_name, table_name, table_type)
     }
 
     pub fn tables_str(self, catalog_name: &str, schema_name: &str, table_name: &str, table_type: &str) -> Result<Statement<'a, 'b, Executed, HasResult, AC>> {
@@ -298,7 +298,7 @@ impl<'p> Raii<'p, ffi::Stmt> {
                 SQL_SUCCESS => Return::Success(ColumnDescriptor {
                     name: ::environment::DB_ENCODING.decode(&name_buffer[..(name_length as usize)]).0
                         .to_string(),
-                    data_type: data_type,
+                    data_type,
                     column_size: if column_size == 0 {
                         None
                     } else {
@@ -318,7 +318,7 @@ impl<'p> Raii<'p, ffi::Stmt> {
                 SQL_SUCCESS_WITH_INFO => Return::SuccessWithInfo(ColumnDescriptor {
                     name: ::environment::DB_ENCODING.decode(&name_buffer[..(name_length as usize)]).0
                         .to_string(),
-                    data_type: data_type,
+                    data_type,
                     column_size: if column_size == 0 {
                         None
                     } else {
@@ -346,7 +346,7 @@ impl<'p> Raii<'p, ffi::Stmt> {
         let bytes = unsafe { crate::environment::DB_ENCODING }.encode(statement_text).0;
 
         let length = bytes.len();
-        if length > ffi::SQLINTEGER::max_value() as usize {
+        if length > ffi::SQLINTEGER::MAX as usize {
             panic!("Statement text too long");
         }
         match unsafe {
@@ -367,7 +367,7 @@ impl<'p> Raii<'p, ffi::Stmt> {
 
     fn exec_direct_bytes(&mut self, bytes: &[u8]) -> Return<bool> {
         let length = bytes.len();
-        if length > ffi::SQLINTEGER::max_value() as usize {
+        if length > ffi::SQLINTEGER::MAX as usize {
             panic!("Statement text too long");
         }
         match unsafe {

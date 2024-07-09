@@ -208,7 +208,7 @@ impl Environment<Version3> {
                 safe::ReturnOption::Error(()) => {
                     let diag = self.get_diag_rec(1).unwrap_or_else(DiagnosticRecord::empty);
                     error!("{}", diag);
-                    return Err(diag);
+                    return Err(Box::new(diag));
                 }
             }
 

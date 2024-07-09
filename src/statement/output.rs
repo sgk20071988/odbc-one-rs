@@ -2,6 +2,8 @@ use raii::Raii;
 use {ffi, Handle, Return};
 use super::types::OdbcType;
 
+/// # Safety
+///
 /// Indicates that a type can be retrieved using `Cursor::get_data`
 pub unsafe trait Output<'a>: Sized {
     fn get_data(
@@ -48,8 +50,8 @@ impl<'p> Raii<'p, ffi::Stmt> {
         if buffer.len() - start_pos == 0 {
             panic!("buffer length may not be zero");
         }
-        if buffer.len() - start_pos > ffi::SQLLEN::max_value() as usize {
-            panic!("buffer is larger than {} bytes", ffi::SQLLEN::max_value());
+        if buffer.len() - start_pos > ffi::SQLLEN::MAX as usize {
+            panic!("buffer is larger than {} bytes", ffi::SQLLEN::MAX);
         }
         let mut indicator: ffi::SQLLEN = 0;
         // Get buffer length...
@@ -57,7 +59,7 @@ impl<'p> Raii<'p, ffi::Stmt> {
                 self.handle(),
                 col_or_param_num,
                 T::c_data_type(),
-                buffer.as_mut_ptr().offset(start_pos as isize) as ffi::SQLPOINTER,
+                buffer.as_mut_ptr().add(start_pos) as ffi::SQLPOINTER,
                 (buffer.len() - start_pos) as ffi::SQLLEN,
                 &mut indicator as *mut ffi::SQLLEN,
             ) };
@@ -83,12 +85,12 @@ impl<'p> Raii<'p, ffi::Stmt> {
                 let null_offset = T::null_bytes_count();
                 if indicator == ffi::SQL_NO_TOTAL {
                     buffer.resize(initial_len * 2, 0);
-                    return self.get_partial_data(col_or_param_num, buffer, initial_len - null_offset);
+                    self.get_partial_data(col_or_param_num, buffer, initial_len - null_offset)
                 } else {
                     // Check if string has been truncated.
                     if indicator >= initial_len as ffi::SQLLEN {
                         buffer.resize(indicator as usize + T::null_bytes_count(), 0);
-                        return self.get_partial_data(col_or_param_num, buffer, initial_len - null_offset);
+                        self.get_partial_data(col_or_param_num, buffer, initial_len - null_offset)
                     } else {
                         let slice = &buffer[..(start_pos + indicator as usize)];
                         // No truncation. Warning may be due to some other issue.

@@ -48,7 +48,7 @@ impl<V: safe::Version> Environment<V> {
     /// fails it is sadly not possible to receive further Diagnostics. Setting an unsupported version
     /// may however result in an ordinary `Some(DiagnosticRecord)`.
     /// ```
-    pub fn new() -> std::result::Result<Environment<V>, Option<DiagnosticRecord>> {
+    pub fn new() -> std::result::Result<Environment<V>, Option<Box<DiagnosticRecord>>> {
         let safe = match safe::Environment::new() {
             safe::Success(v) => v,
             safe::Info(v) => {
@@ -94,14 +94,14 @@ unsafe impl<V> safe::Handle for Environment<V> {
 /// fails it is sadly not possible to receive further Diagnostics. Setting an unsupported version
 /// may however result in an ordinary `Some(DiagnosticRecord)`.
 pub fn create_environment_v3()
-    -> std::result::Result<Environment<Version3>, Option<DiagnosticRecord>>
+    -> std::result::Result<Environment<Version3>, Option<Box<DiagnosticRecord>>>
 {
     Environment::new()
 }
 
 
 pub fn create_environment_v3_with_os_db_encoding(os_encoding: &str, db_encoding: &str)
-    -> std::result::Result<Environment<Version3>, Option<DiagnosticRecord>>
+    -> std::result::Result<Environment<Version3>, Option<Box<DiagnosticRecord>>>
 {
     unsafe {
         OS_ENCODING = encoding_rs::Encoding::for_label(os_encoding.as_bytes()).unwrap();

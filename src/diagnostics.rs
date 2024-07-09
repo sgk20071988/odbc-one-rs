@@ -1,4 +1,6 @@
 use super::{ffi, safe};
+//use std::convert::TryInto;
+//use std::io::Read;
 use std::{fmt, cmp};
 use std::ffi::CStr;
 use std::error::Error;
@@ -37,8 +39,9 @@ impl DiagnosticRecord {
     /// this is needed for errors where the driver doesn't return any diagnostics info.
     pub fn empty() -> DiagnosticRecord {
         let message = b"No SQL-driver error information available.";
+        let state: [u8; 6] = *b"HY000\0";
         let mut rec = DiagnosticRecord {
-            state: b"HY000\0".clone(),
+            state,
             message: [0u8; MAX_DIAGNOSTIC_MESSAGE_SIZE],
             native_error: -1,
             message_length: message.len() as ffi::SQLSMALLINT,
@@ -93,7 +96,7 @@ impl<D> GetDiagRec for D
 where
     D: safe::Diagnostics,
 {
-    fn get_diag_rec(&self, record_number: i16) -> Option<(DiagnosticRecord)> {
+    fn get_diag_rec(&self, record_number: i16) -> Option<DiagnosticRecord> {
         use safe::ReturnOption::*;
         let mut message = [0; MAX_DIAGNOSTIC_MESSAGE_SIZE];
         match self.diagnostics(record_number, &mut message) {
@@ -102,7 +105,7 @@ where
                 let mut message_length = cmp::min(result.text_length, MAX_DIAGNOSTIC_MESSAGE_SIZE as ffi::SQLSMALLINT - 1);
                 // Some drivers pad the message with null-chars (which is still a valid C string, but not a valid Rust string).
                 while message_length > 0 && message[(message_length - 1) as usize] == 0 {
-                    message_length = message_length - 1;
+                    message_length -= 1;
                 }
                 Some(DiagnosticRecord {
                     state: result.state,

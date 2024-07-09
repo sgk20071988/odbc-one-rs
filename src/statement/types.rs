@@ -29,11 +29,14 @@ impl EncodedValue {
         if let Some(buf) = &self.buf {
             buf.as_ptr() as *const Self as ffi::SQLPOINTER
         } else {
-            0 as *const Self as ffi::SQLPOINTER
+            std::ptr::null::<Self>() as ffi::SQLPOINTER
         }
     }
 }
 
+/// # Safety
+/// 
+/// ...
 pub unsafe trait OdbcType<'a>: Sized {
     fn sql_data_type() -> ffi::SqlDataType;
     fn c_data_type() -> ffi::SqlCDataType;
@@ -200,11 +203,11 @@ unsafe impl<'a> OdbcType<'a> for String {
     }
 
     fn column_size(&self) -> ffi::SQLULEN {
-        unsafe { ::environment::DB_ENCODING }.encode(&self).0.len() as ffi::SQLULEN
+        unsafe { ::environment::DB_ENCODING }.encode(self).0.len() as ffi::SQLULEN
     }
 
     fn value_ptr(&self) -> ffi::SQLPOINTER {
-        unsafe { ::environment::DB_ENCODING }.encode(&self).0.as_ptr() as *const Self as ffi::SQLPOINTER
+        unsafe { ::environment::DB_ENCODING }.encode(self).0.as_ptr() as *const Self as ffi::SQLPOINTER
     }
 
     fn null_bytes_count() -> usize {
@@ -212,7 +215,7 @@ unsafe impl<'a> OdbcType<'a> for String {
     }
     
     fn encoded_value(&self) -> EncodedValue {
-        EncodedValue::new(Some(unsafe { ::environment::DB_ENCODING }.encode(&self).0.to_vec()))
+        EncodedValue::new(Some(unsafe { ::environment::DB_ENCODING }.encode(self).0.to_vec()))
     }
 }
 
@@ -245,7 +248,7 @@ unsafe impl<'a> OdbcType<'a> for &'a str {
     }
     
     fn encoded_value(&self) -> EncodedValue {
-        EncodedValue::new(Some(unsafe { ::environment::DB_ENCODING }.encode(&self).0.to_vec()))
+        EncodedValue::new(Some(unsafe { ::environment::DB_ENCODING }.encode(self).0.to_vec()))
     }
 }
 
@@ -695,7 +698,7 @@ unsafe impl<'a, T> OdbcType<'a> for Option<T> where T: OdbcType<'a> {
         if let Some(t) = self {
             t.value_ptr()
         } else {
-            0 as *const Self as ffi::SQLPOINTER
+            std::ptr::null::<Self>() as ffi::SQLPOINTER
         }
     }
 
@@ -708,9 +711,9 @@ unsafe impl<'a, T> OdbcType<'a> for Option<T> where T: OdbcType<'a> {
     }
 }
 
-
+#[cfg(test)]
 mod test {
-    // use environment::create_environment_v3_with_os_db_encoding;
+
     use super::*;
     use std::collections::HashSet;
     use std::borrow::Cow;
@@ -718,9 +721,7 @@ mod test {
     #[test]
     fn encoded_value_test() {
         let mut checker = HashSet::new();
-        let mut encoded_values = Vec::new();
-
-        // let _ = create_environment_v3_with_os_db_encoding("utf8", "sjis");
+        let mut encoded_values: Vec<super::EncodedValue> = Vec::new();
 
         //string test
         for i in 0..10 {

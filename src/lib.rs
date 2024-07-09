@@ -50,10 +50,13 @@ mod environment;
 mod connection;
 mod statement;
 
-
+/// # Safety
+/// 
 /// Reflects the ability of a type to expose a valid handle
 pub trait Handle {
     type To;
+    /// # Safety
+    /// 
     /// Returns a valid handle to the odbc type.
     unsafe fn handle(&self) -> *mut Self::To;
 }

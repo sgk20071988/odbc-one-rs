@@ -9,7 +9,7 @@ fn main() {
     test_me().unwrap()
 }
 
-fn test_me() -> std::result::Result<(), DiagnosticRecord> {
+fn test_me() -> std::result::Result<(), Box<DiagnosticRecord>> {
     let env = create_environment_v3().map_err(|e| {
         e.expect("Can't create ODBC environment")
     })?;

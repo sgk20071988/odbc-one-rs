@@ -41,7 +41,7 @@ impl<'a, 'b, S, R, AC: AutocommitMode> Statement<'a, 'b, S, R, AC> {
         T: ?Sized,
         'b: 'c,
     {
-        let ind = if value.value_ptr() == 0 as *const Self as ffi::SQLPOINTER {
+        let ind = if value.value_ptr() == std::ptr::null::<Self>() as ffi::SQLPOINTER {
             ffi::SQL_NULL_DATA
         } else {
             value.column_size() as ffi::SQLLEN
@@ -70,7 +70,7 @@ impl<'a, 'b, S, R, AC: AutocommitMode> Statement<'a, 'b, S, R, AC> {
     pub fn reset_parameters(mut self) -> Result<Statement<'a, 'a, S, R, AC>> {
         self.param_ind_buffers.clear();
         self.encoded_values.clear();
-        self.raii.reset_parameters().into_result(&mut self)?;
+        self.raii.reset_parameters().into_result(& self)?;
         Ok(Statement::with_raii(self.raii))
     }
 }

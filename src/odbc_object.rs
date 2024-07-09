@@ -1,5 +1,7 @@
 use ffi;
 
+/// # Safety
+/// 
 /// Trait to be implemented by all opaque types which are referenced by handles in the ffi layer
 pub unsafe trait OdbcObject {
     const HANDLE_TYPE: ffi::HandleType;

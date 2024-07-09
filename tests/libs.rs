@@ -193,7 +193,7 @@ fn prepared_execution() {
             panic!("SELECT statement returned no result set");
         };
         stmt.reset_parameters()
-    };
+    }
 
     let stmt = execute_query(1968, "2001: A Space Odyssey", stmt).unwrap();
     execute_query(1993, "Jurassic Park", stmt).unwrap();

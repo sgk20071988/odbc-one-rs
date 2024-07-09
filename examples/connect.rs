@@ -17,7 +17,7 @@ fn main() {
     }
 }
 
-fn connect() -> std::result::Result<(), DiagnosticRecord> {
+fn connect() -> std::result::Result<(), Box<DiagnosticRecord>> {
 
     let env = create_environment_v3().map_err(|e| e.unwrap())?;
 

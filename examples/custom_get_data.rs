@@ -53,7 +53,7 @@ fn main() {
     println!("Success: {}", test_me().unwrap().expect("No result!"))
 }
 
-fn test_me() -> std::result::Result<Option<DateTime<Local>>, DiagnosticRecord> {
+fn test_me() -> std::result::Result<Option<DateTime<Local>>, Box<DiagnosticRecord>> {
     let env = create_environment_v3().map_err(|e| {
         e.expect("Can't create ODBC environment")
     })?;
